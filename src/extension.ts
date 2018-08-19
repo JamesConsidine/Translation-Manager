@@ -23,8 +23,9 @@ export function activate(context: vscode.ExtensionContext) {
             return; // No open text editor
         }
 
-        const extension = editor.document.fileName.split('.').pop();
-        if(extension && extension.toUpperCase() === 'JSON'){
+        const splitFileName = editor.document.fileName.split('.') || [];
+
+        if(isValidFile(splitFileName)){
             const docLineCount = editor.document.lineCount - 1;
             const lastCharIndex = editor.document.lineAt(docLineCount).text.length;
 
@@ -33,25 +34,42 @@ export function activate(context: vscode.ExtensionContext) {
             const input = await vscode.window.showInputBox();
             
             if (input){
-                AddTranslation(contents, input);
-    
-                editor.edit((editBuilder) => {
-                    editBuilder.replace(
-                        new vscode.Range(
-                            new vscode.Position(0, 0), 
-                            new vscode.Position(
-                                docLineCount, 
-                                lastCharIndex
-                            )
-                        ), 
-                        JSON.stringify(contents, null, 4)
-                    );
-                });
+                try {
+                    AddTranslation(contents, input);
+        
+                    replaceContent(editor, docLineCount, lastCharIndex, contents);
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
             }
+        }
+        else {
+            vscode.window.showErrorMessage('Translations can only be added to files with a filename ending in .translation.json (case insensitvie)');
         }
     });
 
     context.subscriptions.push(disposable);
+}
+
+function isValidFile(splitFileName: string[]) {
+    return splitFileName[splitFileName.length - 1].toUpperCase() === 'JSON' &&
+        splitFileName[splitFileName.length - 2].toUpperCase() === 'TRANSLATION';
+}
+
+function replaceContent(
+    editor: vscode.TextEditor, 
+    docLineCount: number, 
+    lastCharIndex: number, 
+    contents: any
+) {
+    editor.edit((editBuilder) => {
+        editBuilder.replace(
+            new vscode.Range(
+                new vscode.Position(0, 0), 
+                new vscode.Position(docLineCount, lastCharIndex)
+            ), 
+            JSON.stringify(contents, null, 4));
+    });
 }
 
 // this method is called when your extension is deactivated
