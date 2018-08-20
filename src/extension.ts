@@ -53,7 +53,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 function isValidFile(splitFileName: string[]) {
     return splitFileName[splitFileName.length - 1].toUpperCase() === 'JSON' &&
-        splitFileName[splitFileName.length - 2].toUpperCase() === 'TRANSLATION';
+        splitFileName[splitFileName.length - 2].toUpperCase() === 'TRANSLATIONS';
 }
 
 function replaceContent(
